@@ -24,23 +24,26 @@ export PATH="/usr/bin:/bin:$PATH"
 unalias php 2>/dev/null || true
 hash -r
 
-echo "==> PHP and MongoDB extension check"
-/usr/bin/php8.3 -v
-/usr/bin/php8.3 -m | grep -i mongodb
+echo "==> Checking php mapping"
+readlink -f /usr/bin/php || true
+update-alternatives --display php || true
+
+echo "==> Forcing php 8.3"
+sudo update-alternatives --set php /usr/bin/php8.3
+hash -r
+
+echo "==> Verifying php and mongodb extension"
+readlink -f /usr/bin/php
+php -v
+php -m | grep -i mongodb
 
 echo "==> Preparing Composer project"
 if [ ! -f composer.json ]; then
   /usr/bin/php8.3 /usr/bin/composer init -n
 fi
 
-EXT_VERSION="$(/usr/bin/php8.3 -r 'echo phpversion("mongodb") ?: "";')"
-if /usr/bin/php8.3 -r 'exit(version_compare(phpversion("mongodb") ?: "0.0.0", "2.2.0", ">=") ? 0 : 1);'; then
-  echo "==> Installing mongodb/mongodb:^2.2 (ext-mongodb ${EXT_VERSION})"
-  /usr/bin/php8.3 /usr/bin/composer require mongodb/mongodb:^2.2
-else
-  echo "==> Installing mongodb/mongodb:^1.21 (ext-mongodb ${EXT_VERSION})"
-  /usr/bin/php8.3 /usr/bin/composer require mongodb/mongodb:^1.21
-fi
+echo "==> Installing MongoDB PHP library compatible with current extension"
+/usr/bin/php8.3 /usr/bin/composer require mongodb/mongodb
 
 if [ ! -f .env.codespace ]; then
   cat > .env.codespace <<'EOF'
