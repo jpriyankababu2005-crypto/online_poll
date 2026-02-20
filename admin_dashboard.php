@@ -1,16 +1,15 @@
 <?php
-session_start();
+require_once __DIR__ . "/includes/auth.php";
 
-if($_SESSION['role'] != 'admin'){
-    header("Location: index.php");
-}
+startAppSession();
+requireRole('admin');
 ?>
 
 
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login</title>
+    <title>Admin Dashboard</title>
 </head>
 <body>
 <h2>Welcome Admin</h2>

@@ -1,27 +1,37 @@
 <?php
-session_start();
-include("config.php");
+require_once __DIR__ . "/includes/auth.php";
+require_once __DIR__ . "/includes/polls.php";
 
-if($_SESSION['role'] != 'admin'){
-    header("Location: index.php");
-}
+startAppSession();
+requireRole('admin');
 
-if(isset($_POST['create'])){
+$message = "";
 
-    $question = $_POST['question'];
+if (isset($_POST['create'])) {
+    $question = trim($_POST['question'] ?? '');
+    $rawOptions = $_POST['options'] ?? [];
+    $options = [];
 
-    mysqli_query($conn, "INSERT INTO polls (question,status) VALUES ('$question','active')");
-    $poll_id = mysqli_insert_id($conn);
-
-    foreach($_POST['options'] as $option){
-        mysqli_query($conn, "INSERT INTO options (poll_id, option_text) VALUES ('$poll_id','$option')");
+    foreach ($rawOptions as $option) {
+        $optionText = trim((string)$option);
+        if ($optionText !== '') {
+            $options[] = $optionText;
+        }
     }
 
-    echo "Poll Created Successfully!";
+    if ($question !== '' && count($options) >= 2) {
+        createPoll($question, $options);
+        $message = "Poll created successfully.";
+    } else {
+        $message = "Enter a question and at least 2 options.";
+    }
 }
 ?>
 
 <h2>Create Poll</h2>
+<?php if ($message !== ""): ?>
+    <p><?php echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8'); ?></p>
+<?php endif; ?>
 
 <form method="POST">
     Question:<br>
