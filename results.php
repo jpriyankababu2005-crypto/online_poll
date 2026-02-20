@@ -27,3 +27,4 @@ $results = $pollId ? getPollResults($pollId) : [];
         <strong><?php echo $row['total']; ?> votes</strong>
     </p>
 <?php endforeach; ?>
+<a href="admin_dashboard.php">Back to dashboard</a><br/>
