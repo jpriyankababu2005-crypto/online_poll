@@ -20,25 +20,26 @@ echo "==> Switching default php to /usr/bin/php8.3"
 if [ -x /usr/bin/php8.3 ]; then
   sudo update-alternatives --set php /usr/bin/php8.3 || true
 fi
-export PATH="/usr/bin:$PATH"
+export PATH="/usr/bin:/bin:$PATH"
+unalias php 2>/dev/null || true
 hash -r
 
 echo "==> PHP and MongoDB extension check"
-php -v
-php -m | grep -i mongodb
+/usr/bin/php8.3 -v
+/usr/bin/php8.3 -m | grep -i mongodb
 
 echo "==> Preparing Composer project"
 if [ ! -f composer.json ]; then
-  composer init -n
+  /usr/bin/php8.3 /usr/bin/composer init -n
 fi
 
-EXT_VERSION="$(php -r 'echo phpversion("mongodb") ?: "";')"
-if php -r 'exit(version_compare(phpversion("mongodb") ?: "0.0.0", "2.2.0", ">=") ? 0 : 1);'; then
+EXT_VERSION="$(/usr/bin/php8.3 -r 'echo phpversion("mongodb") ?: "";')"
+if /usr/bin/php8.3 -r 'exit(version_compare(phpversion("mongodb") ?: "0.0.0", "2.2.0", ">=") ? 0 : 1);'; then
   echo "==> Installing mongodb/mongodb:^2.2 (ext-mongodb ${EXT_VERSION})"
-  composer require mongodb/mongodb:^2.2
+  /usr/bin/php8.3 /usr/bin/composer require mongodb/mongodb:^2.2
 else
   echo "==> Installing mongodb/mongodb:^1.21 (ext-mongodb ${EXT_VERSION})"
-  composer require mongodb/mongodb:^1.21
+  /usr/bin/php8.3 /usr/bin/composer require mongodb/mongodb:^1.21
 fi
 
 if [ ! -f .env.codespace ]; then
@@ -49,11 +50,12 @@ EOF
   echo "==> Created .env.codespace template"
 fi
 
-if ! grep -q 'export PATH="/usr/bin:$PATH"' "$HOME/.bashrc"; then
+if ! grep -q 'export PATH="/usr/bin:/bin:$PATH"' "$HOME/.bashrc"; then
   cat >> "$HOME/.bashrc" <<'EOF'
 
 # online_poll setup
-export PATH="/usr/bin:$PATH"
+export PATH="/usr/bin:/bin:$PATH"
+alias php=/usr/bin/php8.3
 EOF
 fi
 
