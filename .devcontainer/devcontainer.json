@@ -1,0 +1,16 @@
+{
+  "name": "online_poll-php83",
+  "image": "mcr.microsoft.com/devcontainers/php:1-8.3-bookworm",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "xdebug.php-debug",
+        "bmewburn.vscode-intelephense-client"
+      ]
+    }
+  },
+  "forwardPorts": [
+    8000
+  ]
+}
