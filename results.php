@@ -1,24 +1,25 @@
 <?php
-session_start();
+require_once __DIR__ . "/includes/auth.php";
+require_once __DIR__ . "/includes/polls.php";
 
-$pdo = new PDO("mysql:host=localhost;dbname=poll_system", "root", "");
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+startAppSession();
+requireRole('admin');
 
-$poll_id = $_GET['id']; // example: results.php?poll_id=1
+$pollId = oid($_GET['id'] ?? '');
 
-$stmt = $pdo->prepare("
-    SELECT options.option_text, COUNT(votes.id) AS total
-    FROM options
-    LEFT JOIN votes ON options.id = votes.option_id
-    WHERE options.poll_id = ?
-    GROUP BY options.id
-");
+if ($pollId === null) {
+    $latestPoll = getLatestPoll();
+    $pollId = $latestPoll['_id'] ?? null;
+}
 
-$stmt->execute([$poll_id]);
-$results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$results = $pollId ? getPollResults($pollId) : [];
 ?>
 
 <h2>Poll Results</h2>
+
+<?php if (empty($results)): ?>
+    <p>No poll results available.</p>
+<?php endif; ?>
 
 <?php foreach ($results as $row): ?>
     <p>

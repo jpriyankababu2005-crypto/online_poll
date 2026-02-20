@@ -1,45 +1,51 @@
 <?php
-session_start();
-include("config.php");
+require_once __DIR__ . "/includes/auth.php";
+require_once __DIR__ . "/includes/polls.php";
 
-if(!isset($_SESSION['role']) || $_SESSION['role'] != 'user'){
+startAppSession();
+requireRole('user');
+
+$userId = getSessionUserId();
+if ($userId === null) {
+    logoutUser();
     header("Location: index.php");
     exit();
 }
 
-$user_id = $_SESSION['user_id'];
+$feedback = "";
+$poll = getActivePoll();
+$pollId = $poll['_id'] ?? null;
 
-// Get active poll
-$poll_query = mysqli_query($conn, "SELECT * FROM polls WHERE status='active' LIMIT 1");
-$poll = mysqli_fetch_assoc($poll_query);
+if (isset($_POST['vote']) && $pollId) {
+    $optionId = oid($_POST['option_id'] ?? '');
+    if ($optionId === null) {
+        $feedback = "Invalid vote option.";
+    } else {
+        $feedback = castVote($pollId, $optionId, $userId);
+    }
+}
 
-if($poll){
+if ($poll) {
+    $alreadyVoted = hasUserVoted($pollId, $userId);
 
-    $poll_id = $poll['id'];
-    echo "<h2>".$poll['question']."</h2>";
+    echo "<h2>" . htmlspecialchars((string)$poll['question'], ENT_QUOTES, 'UTF-8') . "</h2>";
+    if ($feedback !== "") {
+        echo "<p>" . htmlspecialchars($feedback, ENT_QUOTES, 'UTF-8') . "</p>";
+    }
 
-    // Check if user already voted
-    $check_vote = mysqli_query($conn, 
-        "SELECT * FROM votes WHERE poll_id='$poll_id' AND user_id='$user_id'");
-
-    if(mysqli_num_rows($check_vote) > 0){
+    if ($alreadyVoted) {
         echo "<p><b>You have already voted for this poll.</b></p>";
     } else {
+        $options = getPollOptions($pollId);
 ?>
 
 <form method="POST">
-<?php
-$options = mysqli_query($conn, 
-    "SELECT * FROM options WHERE poll_id='$poll_id'");
-
-while($row = mysqli_fetch_assoc($options)){
-?>
-    <input type="radio" name="option_id" 
-        value="<?php echo $row['id']; ?>" required>
-    <?php echo $row['option_text']; ?>
+<?php foreach ($options as $row): ?>
+    <input type="radio" name="option_id"
+        value="<?php echo htmlspecialchars(objectIdToString($row['_id']), ENT_QUOTES, 'UTF-8'); ?>" required>
+    <?php echo htmlspecialchars((string)$row['option_text'], ENT_QUOTES, 'UTF-8'); ?>
     <br>
-<?php } ?>
-
+<?php endforeach; ?>
 <br>
 <input type="submit" name="vote" value="Vote">
 </form>
@@ -48,17 +54,6 @@ while($row = mysqli_fetch_assoc($options)){
     }
 } else {
     echo "<h3>No Active Poll Available</h3>";
-}
-
-// When user submits vote
-if(isset($_POST['vote'])){
-    $option_id = $_POST['option_id'];
-
-    mysqli_query($conn, 
-        "INSERT INTO votes (poll_id, option_id, user_id) 
-        VALUES ('$poll_id','$option_id','$user_id')");
-
-    echo "<p>Vote Submitted Successfully!</p>";
 }
 ?>
 

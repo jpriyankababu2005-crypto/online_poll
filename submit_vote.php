@@ -1,9 +1,17 @@
 <?php
-include "db.php";
+require_once __DIR__ . "/includes/auth.php";
+require_once __DIR__ . "/includes/polls.php";
 
-$option_id = $_POST['option_id'];
+startAppSession();
 
-$conn->query("UPDATE options SET votes = votes + 1 WHERE id=$option_id");
+if (!isset($_SESSION['user_id'])) {
+    echo "Please login first.";
+    exit();
+}
 
-echo "Thank you for voting!";
+echo handleVoteRequest(
+    $_POST['poll_id'] ?? '',
+    $_POST['option_id'] ?? '',
+    $_SESSION['user_id'] ?? ''
+);
 ?>

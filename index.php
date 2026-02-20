@@ -1,30 +1,29 @@
 <?php
-session_start();
-include("config.php");
+require_once __DIR__ . "/includes/auth.php";
+require_once __DIR__ . "/includes/polls.php";
 
-if(isset($_POST['login'])){
+startAppSession();
 
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+$error = "";
 
-    $query = "SELECT * FROM users WHERE username='$username' AND password='$password'";
-    $result = mysqli_query($conn, $query);
+if (isset($_POST['login'])) {
+    $username = trim($_POST['username'] ?? '');
+    $password = $_POST['password'] ?? '';
 
-    if(mysqli_num_rows($result) == 1){
+    $user = findUserByUsername($username);
 
-        $user = mysqli_fetch_assoc($result);
+    if ($user && isPasswordValid($password, $user['password'] ?? '')) {
+        loginUser($user);
 
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['role'] = $user['role'];
-
-        if($user['role'] == 'admin'){
+        if ($user['role'] == 'admin') {
             header("Location: admin_dashboard.php");
-        } else {
-            header("Location: user_dashboard.php");
+            exit();
         }
 
+        header("Location: user_dashboard.php");
+        exit();
     } else {
-        echo "<script>alert('Invalid Username or Password');</script>";
+        $error = "Invalid username or password.";
     }
 }
 ?>
@@ -37,6 +36,9 @@ if(isset($_POST['login'])){
 <body>
 
 <h2>Login</h2>
+<?php if ($error !== ""): ?>
+    <p style="color:red;"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></p>
+<?php endif; ?>
 
 <form method="POST">
     Username:<br>
