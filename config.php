@@ -43,5 +43,3 @@ function isPasswordValid($plainPassword, $storedPassword)
 
     return hash_equals($storedPassword, $plainPassword);
 }
-
-?>
