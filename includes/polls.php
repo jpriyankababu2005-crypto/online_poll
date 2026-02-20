@@ -14,6 +14,12 @@ function getActivePoll()
     return $db->polls->findOne(['status' => 'active']);
 }
 
+function getAvailablePolls()
+{
+    global $db;
+    return $db->polls->find(['status' => 'active'], ['sort' => ['created_at' => -1]]);
+}
+
 function getPollById($pollId)
 {
     global $db;
