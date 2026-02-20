@@ -11,7 +11,13 @@ function startAppSession()
 
 function loginUser($user)
 {
-    $_SESSION['user_id'] = objectIdToString($user['_id']);
+    $rawId = $user['_id'] ?? '';
+    if ($rawId instanceof MongoDB\BSON\ObjectId) {
+        $_SESSION['user_id'] = (string)$rawId;
+    } else {
+        $_SESSION['user_id'] = trim((string)$rawId);
+    }
+
     $role = strtolower(trim((string)($user['role'] ?? 'user')));
     $_SESSION['role'] = $role !== '' ? $role : 'user';
 }
@@ -33,5 +39,15 @@ function requireRole($role)
 
 function getSessionUserId()
 {
-    return oid($_SESSION['user_id'] ?? '');
+    $rawId = trim((string)($_SESSION['user_id'] ?? ''));
+    if ($rawId === '') {
+        return null;
+    }
+
+    $objectId = oid($rawId);
+    if ($objectId !== null) {
+        return $objectId;
+    }
+
+    return $rawId;
 }
