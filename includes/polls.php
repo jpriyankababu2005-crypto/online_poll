@@ -117,5 +117,3 @@ function getPollResults($pollId)
 
     return $results;
 }
-
-?>

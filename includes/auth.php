@@ -12,7 +12,8 @@ function startAppSession()
 function loginUser($user)
 {
     $_SESSION['user_id'] = objectIdToString($user['_id']);
-    $_SESSION['role'] = $user['role'] ?? 'user';
+    $role = strtolower(trim((string)($user['role'] ?? 'user')));
+    $_SESSION['role'] = $role !== '' ? $role : 'user';
 }
 
 function logoutUser()
@@ -34,5 +35,3 @@ function getSessionUserId()
 {
     return oid($_SESSION['user_id'] ?? '');
 }
-
-?>
