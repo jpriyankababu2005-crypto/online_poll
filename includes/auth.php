@@ -9,7 +9,7 @@ function startAppSession()
     }
 }
 
-function loginUser(array $user)
+function loginUser($user)
 {
     $_SESSION['user_id'] = objectIdToString($user['_id']);
     $_SESSION['role'] = $user['role'] ?? 'user';
