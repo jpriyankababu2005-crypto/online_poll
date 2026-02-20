@@ -16,6 +16,17 @@ sudo apt-get install -y \
   php8.3-mbstring \
   php8.3-xml
 
+if [ ! -x /usr/bin/php8.3 ]; then
+  echo "ERROR: /usr/bin/php8.3 not found after install."
+  exit 1
+fi
+
+COMPOSER_BIN="$(command -v composer || true)"
+if [ -z "$COMPOSER_BIN" ]; then
+  echo "ERROR: composer not found in PATH."
+  exit 1
+fi
+
 echo "==> Switching default php to /usr/bin/php8.3"
 if [ -x /usr/bin/php8.3 ]; then
   sudo update-alternatives --set php /usr/bin/php8.3 || true
@@ -35,15 +46,18 @@ hash -r
 echo "==> Verifying php and mongodb extension"
 readlink -f /usr/bin/php
 php -v
-php -m | grep -i mongodb
+if ! php -m | grep -iq mongodb; then
+  echo "ERROR: mongodb PHP extension is not loaded."
+  exit 1
+fi
 
 echo "==> Preparing Composer project"
 if [ ! -f composer.json ]; then
-  /usr/bin/php8.3 /usr/bin/composer init -n
+  /usr/bin/php8.3 "$COMPOSER_BIN" init -n
 fi
 
 echo "==> Installing MongoDB PHP library compatible with current extension"
-/usr/bin/php8.3 /usr/bin/composer require mongodb/mongodb
+/usr/bin/php8.3 "$COMPOSER_BIN" require mongodb/mongodb:^1.21
 
 if [ ! -f .env.codespace ]; then
   cat > .env.codespace <<'EOF'
