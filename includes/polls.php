@@ -70,7 +70,11 @@ function handleVoteRequest($pollIdValue, $optionIdValue, $sessionUserIdValue)
 {
     $pollId = oid($pollIdValue);
     $optionId = oid($optionIdValue);
+    $sessionUserIdValue = trim((string)$sessionUserIdValue);
     $userId = oid($sessionUserIdValue);
+    if ($userId === null && $sessionUserIdValue !== '') {
+        $userId = $sessionUserIdValue;
+    }
 
     if ($pollId === null || $optionId === null || $userId === null) {
         return 'Invalid vote payload.';
